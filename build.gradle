@@ -28,6 +28,7 @@ plugins {
     id 'codenarc'
     id 'com.jfrog.bintray' version '1.6'
     id 'com.gradle.plugin-publish' version '0.9.1'
+    id 'maven-publish'
 }
 
 /***********************************************************************************************************************
@@ -38,7 +39,7 @@ plugins {
 
 defaultTasks 'jar'
 group = "fi.jasoft.plugin"
-version = project.hasProperty('BUILD_VERSION') ? getProperty('BUILD_VERSION') : 'SNAPSHOT-'+ new Date().format('yyyyMMdd')
+version = project.hasProperty('BUILD_VERSION') ? getProperty('BUILD_VERSION') : new Date().format('yyyyMMdd') + '-SNAPSHOT'
 archivesBaseName ='gradle-vaadin-plugin'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -312,4 +313,28 @@ pluginBundle {
  **********************************************************************************************************************/
 task wrapper(type: Wrapper) {
     gradleVersion = '3.0'
+}
+
+/*
+ * publish project artifacts to repository
+ * add file gradle.properties to system env. $GRADLE_USER_HOME (ie. default is $USER_HOME/.gradle)
+ * set publishUsername, publishPassword, snapshotPublishUrl and releasePublishUrl in gradle.properties
+ */
+publishing {
+    publications {
+        mavenJava(MavenPublication) { from components.java }
+    }
+    repositories {
+        maven {
+            credentials {
+                username publishUsername
+                password publishPassword
+            }
+            if(project.version.endsWith('-SNAPSHOT')) {
+                url snapshotPublishUrl
+            } else {
+                url releasePublishUrl
+            }
+        }
+    }
 }
